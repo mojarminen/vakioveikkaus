@@ -345,3 +345,119 @@ def get_combined_winning_probabilities_of_rows(rows, odds):
 
     return result
     
+
+def create_game(number_of_vakio_rows, number_of_minivakio_rows, row_price_vakio,
+                row_price_minivakio, difficulty_fix_vakio, difficulty_fix_minivakio,
+                preselected_marks, odds, betting_breakdown_vakio, betting_breakdown_minivakio):
+
+    vakio = []
+    minivakio = []
+
+    if number_of_vakio_rows:
+        all_vakio_rows = get_most_valuable_rows(odds, betting_breakdown_vakio, preselected_marks, difficulty_fix_vakio)
+        vakio = all_vakio_rows[:number_of_vakio_rows]
+
+    if number_of_minivakio_rows > 0:
+        all_minivakio_rows = get_most_valuable_rows(odds, betting_breakdown_vakio, preselected_marks, difficulty_fix_minivakio)    
+        minivakio = all_minivakio_rows[:number_of_minivakio_rows]
+    
+    # Parhaat vakiorivit
+    print_games('Vakio', vakio)
+    
+    all_full_rows_to_be_played = []
+    if len(minivakio) > 0:
+        # Parhaat minivakiorivit
+        print_games('Minivakio', minivakio)
+
+        # Vakioon jo sisältyvät parhaat minivakiorivit
+        already_included = []
+        for r in list(set([tuple(v[:len(minivakio[0])]) for v in vakio])):
+            for mrow in minivakio:
+                if mrow == r:
+                    already_included.append(r)
+        print_games(u'Vakioon jo sisältyvät parhaat minivakiorivit', already_included)
+    
+        # Minivakiorivit, jotka ei vielä sisälly vakioon
+        missing_minivakio_rows = []
+        for row in minivakio:
+            match = False
+            for existingrow in already_included:
+                if row == existingrow:
+                    match = True                    
+            if match == False:
+                missing_minivakio_rows.append(row)
+        print_games('Minivakiorivit, jotka ei vielä sisälly vakioon', missing_minivakio_rows)
+    
+        # Parhaat lisärivit kattamaan puuttuvat minivakiorivit
+        additional_rows = []
+        for missing_row in missing_minivakio_rows:
+            for vakio_row in all_vakio_rows:
+                if missing_row == vakio_row[:len(missing_row)]:
+                    additional_rows.append(vakio_row)
+                    break
+        print_games('Parhaat lisärivit kattamaan puuttuvat minivakiorivit', additional_rows)
+
+        all_full_rows_to_be_played = vakio + additional_rows
+    else:
+        all_full_rows_to_be_played = vakio
+
+    
+    # Rivit minivakiolla ja rivit ilman minivakiota
+    rows_with_minivakio = []
+    rows_without_minivakio = []
+    if len(minivakio) > 0:
+        for minirow in minivakio:
+            for row in all_full_rows_to_be_played:
+                if row[:len(minirow)] == minirow:
+                    rows_with_minivakio.append(row)
+                    break
+        rows_without_minivakio = list(set(all_full_rows_to_be_played) - set(rows_with_minivakio))
+    else:
+        rows_without_minivakio = all_full_rows_to_be_played
+
+    if len(minivakio) > 0:
+        print_games('Rivit minivakiolla', rows_with_minivakio)    
+    print_games('Rivit ilman minivakiota', rows_without_minivakio)
+
+
+    # Vakion voittotodennäköisyydet
+    h = u'Vakion voittotodennäköisyydet'
+    print '*'*len(h)
+    print h
+    print '*'*len(h)
+    winning_probabilities = get_combined_winning_probabilities_of_rows(rows_with_minivakio + rows_without_minivakio, odds)
+    print 'Arvioitu kaikki oikein todennäköisyys:        ', winning_probabilities['jackpot']
+    print 'Arvioitu (vähintään) -1 oikein todennäköisyys:', winning_probabilities['minus_one']
+    print 'Arvioitu (vähintään) -2 oikein todennäköisyys:', winning_probabilities['minus_two']
+    if 'minus_three' in winning_probabilities:
+        print 'Arvioitu (vähintään) -3 oikein todennäköisyys:', winning_probabilities['minus_three']
+    print
+
+    if len(minivakio) > 0:
+        # Vakion voittotodennäköisyydet
+        h = u'Minivakion voittotodennäköisyydet'
+        print '*'*len(h)
+        print h
+        print '*'*len(h)
+        winning_probabilities = get_combined_winning_probabilities_of_rows(minivakio, ODDS)
+        print 'Arvioitu kaikki oikein todennäköisyys:', winning_probabilities['jackpot']
+        print
+
+    # Laskennassa käytetyt todennäköisyydet
+    h = u'Laskennassa käytetyt todennäköisyydet:'
+    print '*' * len(h)
+    print h
+    print '*' * len(h)
+    for k, odds in odds.items():
+        print "%2s: %2s %2s %2s" % (k, int(round(100/odds[0])), int(round(100/odds[1])), int(round(100/odds[2])))
+    print
+
+    # Hinta
+    h = 'Hinta'
+    print '*' * len(h)
+    print h
+    print '*' * len(h)
+    print 'Vakio ' + str(len(rows_without_minivakio))+'*' + str(row_price_vakio) + '€' + ' = ' + str(row_price_vakio*len(rows_without_minivakio)) + '€'
+    if len(rows_with_minivakio) > 0:
+        print 'Vakio+Minivakio ' + str(len(rows_with_minivakio))+'*' + str(row_price_vakio+row_price_minivakio) + '€' + ' = ' + str((row_price_vakio+row_price_minivakio)*len(rows_with_minivakio)) + '€'
+        print 'Yht. = ' + str((row_price_minivakio+row_price_vakio)*len(rows_with_minivakio) + row_price_vakio*len(rows_without_minivakio)) + '€'   

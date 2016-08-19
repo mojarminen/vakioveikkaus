@@ -4,11 +4,13 @@ import vakioveikkaus
 
 NUMBER_OF_PLAYED_VAKIO_ROWS = 48
 NUMBER_OF_PLAYED_MINIVAKIO_ROWS = 0
+ROW_PRICE_VAKIO = 0.25
+ROW_PRICE_MINIVAKIO = 0.25
 
 # 1=Values are not fixed, >1=Larger probabilities are favored
 # 1.0-2.0
 DIFFICULTY_FIX_VAKIO = 1.5
-DIFFICULTY_FIX_MINIVAKIO = 1.3
+DIFFICULTY_FIX_MINIVAKIO = 1.7
 
 LOCKED = {1:  '', #'2',
           2:  '', #'2',
@@ -85,6 +87,7 @@ if __name__ == '__main__':
     # Parhaat vakiorivit
     vakioveikkaus.print_games('Vakio', vakio)
     
+    all_full_rows_to_be_played = []
     if len(minivakio) > 0:
         # Parhaat minivakiorivit
         vakioveikkaus.print_games('Minivakio', minivakio)
@@ -117,32 +120,36 @@ if __name__ == '__main__':
                     break
         vakioveikkaus.print_games('Parhaat lisärivit kattamaan puuttuvat minivakiorivit', additional_rows)
 
-    try:
         all_full_rows_to_be_played = vakio + additional_rows
-    except NameError:
+    else:
         all_full_rows_to_be_played = vakio
+
     
     # Rivit minivakiolla ja rivit ilman minivakiota
     rows_with_minivakio = []
     rows_without_minivakio = []
-    for minirow in minivakio:
-        for row in all_full_rows_to_be_played:
-            if row[:len(minirow)] == minirow:
-                rows_with_minivakio.append(row)
-                break
-    rows_without_minivakio = list(set(all_full_rows_to_be_played) - set(rows_with_minivakio))
+    if len(minivakio) > 0:
+        for minirow in minivakio:
+            for row in all_full_rows_to_be_played:
+                if row[:len(minirow)] == minirow:
+                    rows_with_minivakio.append(row)
+                    break
+        rows_without_minivakio = list(set(all_full_rows_to_be_played) - set(rows_with_minivakio))
+    else:
+        rows_without_minivakio = all_full_rows_to_be_played
 
-    vakioveikkaus.print_games('Rivit minivakiolla', rows_with_minivakio)    
+    if len(minivakio) > 0:
+        vakioveikkaus.print_games('Rivit minivakiolla', rows_with_minivakio)    
     vakioveikkaus.print_games('Rivit ilman minivakiota', rows_without_minivakio)
 
 
     # Vakion voittotodennäköisyydet
-    h = 'Vakion voittotodennäköisyydet'
+    h = u'Vakion voittotodennäköisyydet'
     print '*'*len(h)
     print h
     print '*'*len(h)
     winning_probabilities = vakioveikkaus.get_combined_winning_probabilities_of_rows(rows_with_minivakio + rows_without_minivakio, ODDS)
-    print 'Arvioitu kaikki oikein todennäköisyys:', winning_probabilities['jackpot']
+    print 'Arvioitu kaikki oikein todennäköisyys:        ', winning_probabilities['jackpot']
     print 'Arvioitu (vähintään) -1 oikein todennäköisyys:', winning_probabilities['minus_one']
     print 'Arvioitu (vähintään) -2 oikein todennäköisyys:', winning_probabilities['minus_two']
     if 'minus_three' in winning_probabilities:
@@ -151,7 +158,7 @@ if __name__ == '__main__':
 
     if len(minivakio) > 0:
         # Vakion voittotodennäköisyydet
-        h = 'Minivakion voittotodennäköisyydet'
+        h = u'Minivakion voittotodennäköisyydet'
         print '*'*len(h)
         print h
         print '*'*len(h)
@@ -160,8 +167,20 @@ if __name__ == '__main__':
         print
 
     # Laskennassa käytetyt todennäköisyydet
-    print 'Laskennassa käytetyt todennäköisyydet:'
+    h = u'Laskennassa käytetyt todennäköisyydet:'
+    print '*' * len(h)
+    print h
+    print '*' * len(h)
     for k, odds in ODDS.items():
-        print str(k) + ':', int(round(100/odds[0])), int(round(100/odds[1])), int(round(100/odds[2]))
+        print "%2s: %2s %2s %2s" % (k, int(round(100/odds[0])), int(round(100/odds[1])), int(round(100/odds[2])))
     print
 
+    # Hinta
+    h = 'Hinta'
+    print '*' * len(h)
+    print h
+    print '*' * len(h)
+    print 'Vakio ' + str(len(rows_without_minivakio))+'*' + str(ROW_PRICE_VAKIO) + '€' + ' = ' + str(ROW_PRICE_VAKIO*len(rows_without_minivakio)) + '€'
+    if len(rows_with_minivakio) > 0:
+        print 'Vakio+Minivakio ' + str(len(rows_with_minivakio))+'*' + str(ROW_PRICE_VAKIO+ROW_PRICE_MINIVAKIO) + '€' + ' = ' + str((ROW_PRICE_VAKIO+ROW_PRICE_MINIVAKIO)*len(rows_with_minivakio)) + '€'
+        print 'Yht. = ' + str((ROW_PRICE_VAKIO+ROW_PRICE_MINIVAKIO)*len(rows_with_minivakio) + ROW_PRICE_VAKIO*len(rows_without_minivakio)) + '€'   

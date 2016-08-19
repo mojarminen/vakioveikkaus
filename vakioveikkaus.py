@@ -314,7 +314,7 @@ def print_games(heading, rows):
     
     id_on_game_sheet = 1
     for idx, row in enumerate(rows):
-        print idx+1, '(' + str(id_on_game_sheet) + '):', row
+        print "%3s %4s: %s" % (idx+1, '(' + str(id_on_game_sheet) + ')', row)
         if id_on_game_sheet == 16:
             print
         id_on_game_sheet = id_on_game_sheet + 1 if id_on_game_sheet < 16 else 1

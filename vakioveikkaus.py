@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import math
+import heapq
+
 def odds_to_probabilities(odds):
     probabilities = {}
     for k,v in odds.items():
@@ -40,7 +43,6 @@ def calculate_value_of_row(row, probabilities, breakdown_odds, difficulty_fix=1)
             probability *= probabilities[idx + 1][2]
             breakdown_odd *= breakdown_odds[idx + 1][2]
 
-    import math
     return breakdown_odd * math.pow(probability, difficulty_fix)
 
 
@@ -254,22 +256,185 @@ def get_row_minus_3_probability(row, probabilities):
     return total_probability
 
 
-def get_all_allowed_rows(row_length, predefined_marks):
-    allowed_rows = []
-    for row in get_all_possible_rows(row_length):
-        is_allowed = True
-        for k,v in predefined_marks.items():
-            if v and len(row) >= k and row[k-1] not in v:
-                is_allowed = False
-                break
-                
-        if is_allowed:
-            allowed_rows.append(row)
+def get_atleast_minus_4_probability(rows, probabilities):
     
-    return allowed_rows
+    # Get all different combinations of -4.
+    rows_with_minuses = {}
+    for row in rows:
+        for skip1 in range(len(row)):
+            for skip2 in range(len(row)):
+                if skip1 == skip2:
+                    continue
+                for skip3 in range(len(row)):
+                    if skip1 == skip3 or skip2 == skip3:
+                        continue
+                    for skip4 in range(len(row)):
+                        if skip1 == skip4 or skip2 == skip4 or skip3 == skip4:
+                            continue
+
+                        tmp_row = list(row)
+                        tmp_row[skip1] = ''
+                        tmp_row[skip2] = ''
+                        tmp_row[skip3] = ''
+                        tmp_row[skip4] = ''
+                        tmp_row = tuple(tmp_row)
+                        
+                        rows_with_minuses[tmp_row] = None
+                        
+    total_probability = 0.0
+    for row in rows_with_minuses:
+        probability = 1.0
+        for idx, mark in enumerate(row):
+            if mark == '':
+                probability *= 1            
+            elif mark == '1':
+                probability *= probabilities[idx + 1][0]
+            elif mark == 'X':
+                probability *= probabilities[idx + 1][1]
+            elif mark == '2':
+                probability *= probabilities[idx + 1][2]
+
+        total_probability += probability
+        
+    return total_probability
+    
+
+def get_atleast_minus_5_probability(rows, probabilities):
+    
+    # Get all different combinations of -5.
+    rows_with_minuses = {}
+    for row in rows:
+        for skip1 in range(0, len(row)-4):
+            for skip2 in range(skip1+1, len(row)-3):
+                if skip1 == skip2:
+                    raise Exception('aargh!')
+                for skip3 in range(skip2+1, len(row)-2):
+                    if skip1 == skip3 or skip2 == skip3:
+                        raise Exception('aargh!')
+                    for skip4 in range(skip3+1, len(row)-1):
+                        if skip1 == skip4 or skip2 == skip4 or skip3 == skip4:
+                            raise Exception('aargh!')
+                        for skip5 in range(skip4+1, len(row)):
+                            if skip5 == skip1 or skip5 == skip2 or skip5 == skip3 or skip5 == skip4:
+                                raise Exception('aargh!')
+
+                            tmp_row = list(row)
+                            tmp_row[skip1] = ''
+                            tmp_row[skip2] = ''
+                            tmp_row[skip3] = ''
+                            tmp_row[skip4] = ''
+                            tmp_row[skip5] = ''
+                            tmp_row = tuple(tmp_row)
+                            
+                            rows_with_minuses[tmp_row] = None
+                        
+    total_probability = 0.0
+    for row in rows_with_minuses:
+        probability = 1.0
+        for idx, mark in enumerate(row):
+            if mark == '':
+                probability *= 1            
+            elif mark == '1':
+                probability *= probabilities[idx + 1][0]
+            elif mark == 'X':
+                probability *= probabilities[idx + 1][1]
+            elif mark == '2':
+                probability *= probabilities[idx + 1][2]
+
+        total_probability += probability
+        
+    return total_probability
+    
+
+def get_all_allowed_rows(row_length, predefined_marks):
+    if row_length > 15:
+        first_allowed_parts = []
+        second_allowed_parts = []
+        for row in get_all_possible_rows(row_length/2):
+            is_allowed = True
+            for k,v in predefined_marks.items():
+                if k <= row_length/2 and v and row[k-1] not in v:
+                    is_allowed = False
+                    break
+            if is_allowed:
+                first_allowed_parts.append(row)
+        for row in get_all_possible_rows(row_length - row_length/2):
+            is_allowed = True
+            for k,v in predefined_marks.items():
+                if k > row_length/2 and v and row[k-1] not in v:
+                    is_allowed = False
+                    break
+            if is_allowed:
+                second_allowed_parts.append(row)
+                
+        return first_allowed_parts, second_allowed_parts
+    else:
+        allowed_rows = []
+        for row in get_all_possible_rows(row_length):
+            is_allowed = True
+            for k,v in predefined_marks.items():
+                if v and len(row) >= k and row[k-1] not in v:
+                    is_allowed = False
+                    break
+                    
+            if is_allowed:
+                allowed_rows.append(row)
+        
+        return allowed_rows
 
 
-def get_most_valuable_rows(odds, betting_breakdown, predefined_marks, difficulty_fix):
+def get_atleast_minus_6_probability(rows, probabilities):
+    
+    # Get all different combinations of -6.
+    rows_with_minuses = {}
+    for row in rows:
+        for skip1 in range(0, len(row)-5):
+            for skip2 in range(skip1+1, len(row)-4):
+                if skip2 == skip1:
+                    continue
+                for skip3 in range(skip2+1, len(row)-3):
+                    if skip3 == skip1 or skip3 == skip2:
+                        continue
+                    for skip4 in range(skip3+1, len(row)-2):
+                        if skip4 == skip1 or skip4 == skip2 or skip4 == skip3:
+                            continue
+                        for skip5 in range(skip4+1, len(row)-1):
+                            if skip5 == skip1 or skip5 == skip2 or skip5 == skip3 or skip5 == skip4:
+                                continue
+                            for skip6 in range(skip5+1, len(row)):
+                                if skip6 == skip1 or skip6 == skip2 or skip6 == skip3 or skip6 == skip4 or skip6 == skip5:
+                                    continue
+
+                                tmp_row = list(row)
+                                tmp_row[skip1] = ''
+                                tmp_row[skip2] = ''
+                                tmp_row[skip3] = ''
+                                tmp_row[skip4] = ''
+                                tmp_row[skip5] = ''
+                                tmp_row[skip6] = ''
+                                tmp_row = tuple(tmp_row)
+                                
+                                rows_with_minuses[tmp_row] = None
+                        
+    total_probability = 0.0
+    for row in rows_with_minuses:
+        probability = 1.0
+        for idx, mark in enumerate(row):
+            if mark == '':
+                probability *= 1            
+            elif mark == '1':
+                probability *= probabilities[idx + 1][0]
+            elif mark == 'X':
+                probability *= probabilities[idx + 1][1]
+            elif mark == '2':
+                probability *= probabilities[idx + 1][2]
+
+        total_probability += probability
+        
+    return total_probability
+
+    
+def get_most_valuable_rows(odds, betting_breakdown, predefined_marks, difficulty_fix, n=None):
     ''' Returns n rows in an order from best valued to the worst based on odd divided by probability
         Returns all rows if n is not given
     '''
@@ -280,18 +445,45 @@ def get_most_valuable_rows(odds, betting_breakdown, predefined_marks, difficulty
     for k, v in betting_breakdown.items():
         breakdown_odds[k] = (100./v[0], 100./v[1], 100./v[2])
 
-
-    # Get all possible rows and filter out rows that don't match to predefined marks.
-    allowed_rows = get_all_allowed_rows(len(betting_breakdown), predefined_marks)
-
-    values = []
-    for row in allowed_rows:
-        v = calculate_value_of_row(row, probabilities, breakdown_odds, difficulty_fix)
-        values.append((row,v))
-    values.sort(key=lambda x: x[1])
-    values.reverse()
     
-    return [v[0] for v in values]
+    if len(betting_breakdown) > 15:
+        if n is None or n > 1000:
+            n = 1000
+        
+        allowed_row_parts1, allowed_row_parts2 = get_all_allowed_rows(len(betting_breakdown), predefined_marks)
+        
+        values = []
+        
+        for idx1, a1 in enumerate(allowed_row_parts1[:3000]):            
+            for idx2, a2 in enumerate(allowed_row_parts2[:3000]):
+                v = calculate_value_of_row(a1+a2, probabilities, breakdown_odds, difficulty_fix)
+                heapq.heappush(values, (v, idx1, idx2))
+                if len(values) > 1000:
+                    heapq.heappop(values)
+                    
+        values.sort(key=lambda x: x[2])
+        values.reverse()
+        
+        result = []
+        for val, idx1, idx2 in values[:n]:
+            result.append(allowed_row_parts1[idx1] + allowed_row_parts2[idx2])
+    else:
+        # Get all possible rows and filter out rows that don't match to predefined marks.
+        allowed_rows = get_all_allowed_rows(len(betting_breakdown), predefined_marks)
+
+        values = []
+        for row in allowed_rows:
+            v = calculate_value_of_row(row, probabilities, breakdown_odds, difficulty_fix)
+            values.append((row,v))
+        values.sort(key=lambda x: x[1])
+        values.reverse()
+        
+        if n:
+            result = [v[0] for v in values[:n]]
+        else:
+            result = [v[0] for v in values]
+            
+    return result
 
 
 def get_number_of_differences(row1, row2):
@@ -342,6 +534,10 @@ def get_combined_winning_probabilities_of_rows(rows, odds):
         result['minus_two'] = get_atleast_minus_2_probability(rows, probabilities)
     if len(rows[0]) > 12:
         result['minus_three'] = get_atleast_minus_3_probability(rows, probabilities)
+    if len(rows[0]) > 14:
+        result['minus_four'] = get_atleast_minus_4_probability(rows, probabilities)
+        result['minus_five'] = get_atleast_minus_5_probability(rows, probabilities)
+        result['minus_six'] = get_atleast_minus_6_probability(rows, probabilities)
 
     return result
     
@@ -358,7 +554,7 @@ def create_game(number_of_vakio_rows, number_of_minivakio_rows, row_price_vakio,
         vakio = all_vakio_rows[:number_of_vakio_rows]
 
     if number_of_minivakio_rows > 0:
-        all_minivakio_rows = get_most_valuable_rows(odds, betting_breakdown_vakio, preselected_marks, difficulty_fix_minivakio)    
+        all_minivakio_rows = get_most_valuable_rows(odds, betting_breakdown_minivakio, preselected_marks, difficulty_fix_minivakio)    
         minivakio = all_minivakio_rows[:number_of_minivakio_rows]
     
     # Parhaat vakiorivit
@@ -431,6 +627,12 @@ def create_game(number_of_vakio_rows, number_of_minivakio_rows, row_price_vakio,
     print 'Arvioitu (vähintään) -2 oikein todennäköisyys:', winning_probabilities['minus_two']
     if 'minus_three' in winning_probabilities:
         print 'Arvioitu (vähintään) -3 oikein todennäköisyys:', winning_probabilities['minus_three']
+    if 'minus_four' in winning_probabilities:
+        print 'Arvioitu (vähintään) -4 oikein todennäköisyys:', winning_probabilities['minus_four']
+    if 'minus_five' in winning_probabilities:
+        print 'Arvioitu (vähintään) -5 oikein todennäköisyys:', winning_probabilities['minus_five']
+    if 'minus_six' in winning_probabilities:
+        print 'Arvioitu (vähintään) -6 oikein todennäköisyys:', winning_probabilities['minus_six']
     print
 
     if len(minivakio) > 0:
@@ -439,7 +641,7 @@ def create_game(number_of_vakio_rows, number_of_minivakio_rows, row_price_vakio,
         print '*'*len(h)
         print h
         print '*'*len(h)
-        winning_probabilities = get_combined_winning_probabilities_of_rows(minivakio, ODDS)
+        winning_probabilities = get_combined_winning_probabilities_of_rows(minivakio, odds)
         print 'Arvioitu kaikki oikein todennäköisyys:', winning_probabilities['jackpot']
         print
 
@@ -461,3 +663,13 @@ def create_game(number_of_vakio_rows, number_of_minivakio_rows, row_price_vakio,
     if len(rows_with_minivakio) > 0:
         print 'Vakio+Minivakio ' + str(len(rows_with_minivakio))+'*' + str(row_price_vakio+row_price_minivakio) + '€' + ' = ' + str((row_price_vakio+row_price_minivakio)*len(rows_with_minivakio)) + '€'
         print 'Yht. = ' + str((row_price_minivakio+row_price_vakio)*len(rows_with_minivakio) + row_price_vakio*len(rows_without_minivakio)) + '€'   
+
+
+if __name__ == '__main__':
+    count = 0
+    for p1 in get_all_possible_rows(9):
+        for p2 in get_all_possible_rows(9):
+            count += 1
+        print count
+    print count
+    
